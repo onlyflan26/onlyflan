@@ -330,6 +330,10 @@ def create_admin(username, password):
     click.echo('Administrador creado.')
 
 
+with app.app_context():
+    db.create_all()
+    migrate_schema()
+
 if __name__ == '__main__':
     from waitress import serve
     serve(app, host=os.environ.get('HOST', '127.0.0.1'), port=int(os.environ.get('PORT', '5000')))
