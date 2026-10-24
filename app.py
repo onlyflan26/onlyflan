@@ -330,6 +330,29 @@ def create_admin(username, password):
     click.echo('Administrador creado.')
 
 
+_SETUP_TOKEN = os.environ.get('SETUP_TOKEN', '')
+
+@app.route('/setup-admin', methods=['GET', 'POST'])
+def setup_admin():
+    if not _SETUP_TOKEN or request.args.get('token') != _SETUP_TOKEN:
+        abort(403)
+    if db.session.scalar(db.select(User).where(User.role == 'admin')):
+        return 'Ya existe un administrador.', 400
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip().lower()
+        password = request.form.get('password', '')
+        if not username or len(username) > 80 or len(password) < 10:
+            return 'Usuario inválido o contraseña menor a 10 caracteres.', 400
+        db.session.add(User(username=username, password_hash=generate_password_hash(password), role='admin'))
+        db.session.commit()
+        return 'Administrador creado. Elimina SETUP_TOKEN del entorno ahora.'
+    return '''<form method="post">
+        <input name="username" placeholder="Usuario" required>
+        <input name="password" type="password" placeholder="Contraseña (min 10 caracteres)" required>
+        <button type="submit">Crear admin</button>
+    </form>'''
+
+
 with app.app_context():
     db.create_all()
     migrate_schema()
