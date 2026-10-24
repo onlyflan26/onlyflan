@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: onlyflan
+    runtime: python
+    buildCommand: pip install -r requirements.txt && flask --app app init-db
+    startCommand: python app.py
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+      - key: HTTPS_ONLY
+        value: 1
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: onlyflan-db
+          property: connectionString
+
+databases:
+  - name: onlyflan-db
+    databaseName: onlyflan
+    user: onlyflan
+    plan: free

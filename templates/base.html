@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Flanes artesanales en La Paz. Descubre tus sabores favoritos y coordina tu pedido por WhatsApp con ONLYFLAN.">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}ONLYFLAN · Dulzura que enamora{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='onlyflan-logo-propuesta-01.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Saltar al contenido</a>
+<header class="header"><a class="brand" href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='onlyflan-logo-propuesta-01.png') }}" alt=""><span>ONLYFLAN<small>DULZURA QUE ENAMORA</small></span></a>
+<nav aria-label="Principal"><a href="{{ url_for('home') }}#sabores">Nuestros flanes</a><a class="nav-how" href="{{ url_for('home') }}#como-pedir">Cómo pedir</a>{% if current_user.is_authenticated %}<a href="{{ url_for('panel') }}">Mi panel</a>{% endif %}{% block nav %}{% endblock %}</nav></header>
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flashes" role="status">{% for category, message in messages %}<p class="flash {{ category }}">{{ message }}</p>{% endfor %}</div>{% endif %}{% endwith %}
+<main id="main">{% block content %}{% endblock %}</main>
+<footer><a class="wordmark" href="{{ url_for('home') }}">ONLYFLAN<span>Hecho para enamorar.</span></a><p>La Paz, Bolivia<br>Pago y entrega bajo coordinación.</p><a href="{{ url_for('panel') if current_user.is_authenticated else url_for('sign_in') }}">Acceso del equipo ↗</a></footer><div class="dev-credit" aria-label="Crédito del sitio"><a class="dev-credit-link" href="https://web-rodca.web.app/" target="_blank" rel="noopener noreferrer" aria-label="Hecho con amor por RodCA, abrir sitio en una nueva pestaña"><span class="dev-credit-label">Hecho con <span class="dev-credit-heart" aria-label="amor">♥</span> por</span><span class="dev-credit-signature"><span class="dev-credit-name">RodCA</span></span></a></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body></html>

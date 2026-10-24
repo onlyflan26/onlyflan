@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+instance/
+assets/uploads/
+output/
+.claude/
+*.pyc
+*.pyo
+.env
