@@ -331,6 +331,29 @@ def create_admin(username, password):
 
 
 
+_SETUP_TOKEN = os.environ.get('SETUP_TOKEN', '')
+
+@app.route('/setup-seed')
+def setup_seed():
+    if not _SETUP_TOKEN or request.args.get('token') != _SETUP_TOKEN:
+        abort(403)
+    if db.session.scalar(db.select(Product.id).limit(1)):
+        return 'Ya hay productos cargados.', 400
+    entries = [
+        ('Clásico de vainilla', 'El clásico que enamora: suave vainilla bañada en caramelo.', 'clasico-vainilla'),
+        ('Vainilla y café', 'La suavidad de la vainilla con el carácter del café.', 'vainilla-cafe'),
+        ('Vainilla y chocolate', 'Dos favoritos juntos: vainilla cremosa y una base de chocolate.', 'vainilla-chocolate'),
+        ('Clásico con almendra', 'Nuestro clásico de vainilla con el delicado toque de la almendra.', 'clasico-almendra'),
+        ('Clásico con nuez', 'Vainilla y caramelo acompañados de nuez.', 'clasico-nuez'),
+        ('Flan whiskero', 'Vainilla, café y un toque de whisky.', 'flan-whiskero'),
+        ('Flan añejo', 'Vainilla y un toque de ron para un sabor especial.', 'flan-anejo'),
+    ]
+    for name, description, image in entries:
+        db.session.add(Product(name=name, description=description, price=70, image='productos/' + image + '-v1.png', available=True))
+    db.session.commit()
+    return '7 productos cargados. Elimina SETUP_TOKEN del entorno ahora.'
+
+
 with app.app_context():
     db.create_all()
     migrate_schema()
