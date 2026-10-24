@@ -23,9 +23,11 @@ if not secret_file.exists():
     secret_file.write_text(secrets.token_hex(32))
 
 _db_url = os.environ.get('DATABASE_URL', 'sqlite:///onlyflan.db')
-# Render entrega 'postgres://' pero SQLAlchemy requiere 'postgresql+psycopg://'
+# Normalizar a postgresql+psycopg:// para SQLAlchemy
 if _db_url.startswith('postgres://'):
     _db_url = _db_url.replace('postgres://', 'postgresql+psycopg://', 1)
+elif _db_url.startswith('postgresql://'):
+    _db_url = _db_url.replace('postgresql://', 'postgresql+psycopg://', 1)
 
 app.config.update(
     SECRET_KEY=os.environ.get('SECRET_KEY') or secret_file.read_text().strip(),
