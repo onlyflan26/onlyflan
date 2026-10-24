@@ -346,7 +346,9 @@ def setup_admin():
         db.session.add(User(username=username, password_hash=generate_password_hash(password), role='admin'))
         db.session.commit()
         return 'Administrador creado. Elimina SETUP_TOKEN del entorno ahora.'
-    return '''<form method="post">
+    from flask_wtf.csrf import generate_csrf
+    return f'''<form method="post">
+        <input type="hidden" name="csrf_token" value="{generate_csrf()}">
         <input name="username" placeholder="Usuario" required>
         <input name="password" type="password" placeholder="Contraseña (min 10 caracteres)" required>
         <button type="submit">Crear admin</button>
