@@ -331,44 +331,6 @@ def create_admin(username, password):
 
 
 
-_SETUP_TOKEN = os.environ.get('SETUP_TOKEN', '')
-
-@app.route('/setup-all')
-def setup_all():
-    if not _SETUP_TOKEN or request.args.get('token') != _SETUP_TOKEN:
-        abort(403)
-    msgs = []
-    # Admin
-    admin_user = request.args.get('user', '').strip().lower()
-    admin_pass = request.args.get('pass', '')
-    if admin_user and len(admin_pass) >= 10:
-        if not db.session.scalar(db.select(User).where(User.username == admin_user)):
-            db.session.add(User(username=admin_user, password_hash=generate_password_hash(admin_pass), role='admin'))
-            db.session.commit()
-            msgs.append(f'Admin "{admin_user}" creado.')
-        else:
-            msgs.append(f'Admin "{admin_user}" ya existia.')
-    # Productos
-    if not db.session.scalar(db.select(Product.id).limit(1)):
-        entries = [
-            ('Clásico de vainilla', 'El clásico que enamora: suave vainilla bañada en caramelo.', 'clasico-vainilla'),
-            ('Vainilla y café', 'La suavidad de la vainilla con el carácter del café.', 'vainilla-cafe'),
-            ('Vainilla y chocolate', 'Dos favoritos juntos: vainilla cremosa y una base de chocolate.', 'vainilla-chocolate'),
-            ('Clásico con almendra', 'Nuestro clásico de vainilla con el delicado toque de la almendra.', 'clasico-almendra'),
-            ('Clásico con nuez', 'Vainilla y caramelo acompañados de nuez.', 'clasico-nuez'),
-            ('Flan whiskero', 'Vainilla, café y un toque de whisky.', 'flan-whiskero'),
-            ('Flan añejo', 'Vainilla y un toque de ron para un sabor especial.', 'flan-anejo'),
-        ]
-        for name, description, image in entries:
-            db.session.add(Product(name=name, description=description, price=70, image='productos/' + image + '-v1.png', available=True))
-        db.session.commit()
-        msgs.append('7 productos cargados.')
-    else:
-        msgs.append('Productos ya existian.')
-    msgs.append('ELIMINA SETUP_TOKEN DEL ENTORNO AHORA.')
-    return ' | '.join(msgs)
-
-
 with app.app_context():
     db.create_all()
     migrate_schema()
