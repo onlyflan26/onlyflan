@@ -274,6 +274,24 @@ def create_admin_user():
     return redirect(url_for('panel'))
 
 
+@app.post('/panel/usuarios/<int:uid>/eliminar')
+@admin_only
+def delete_user(uid):
+    user = db.get_or_404(User, uid)
+    if user.id == current_user.id:
+        flash('No puedes eliminarte a ti mismo.', 'error')
+        return redirect(url_for('panel'))
+    if user.role == 'admin':
+        admin_count = db.session.scalar(db.select(db.func.count()).select_from(User).where(User.role == 'admin'))
+        if admin_count <= 1:
+            flash('No puedes eliminar al único administrador.', 'error')
+            return redirect(url_for('panel'))
+    db.session.delete(user)
+    db.session.commit()
+    flash(f'Usuario "{user.username}" eliminado.', 'success')
+    return redirect(url_for('panel'))
+
+
 @app.post('/panel/vendedores/<int:uid>/estado')
 @admin_only
 def seller_status(uid):
