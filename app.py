@@ -157,7 +157,7 @@ def sign_out():
 @app.route('/panel')
 @login_required
 def panel():
-    return render_template('panel.html', products=db.session.scalars(db.select(Product).order_by(Product.id)).all(), users=db.session.scalars(db.select(User).where(User.role == 'seller')).all() if current_user.role == 'admin' else [], whatsapp=phone())
+    return render_template('panel.html', products=db.session.scalars(db.select(Product).order_by(Product.id)).all(), users=db.session.scalars(db.select(User).where(User.role == 'seller')).all() if current_user.role == 'admin' else [], admins=db.session.scalars(db.select(User).where(User.role == 'admin')).all() if current_user.role == 'admin' else [], whatsapp=phone())
 
 
 @app.post('/panel/productos/<int:pid>/estado')
@@ -258,6 +258,22 @@ def create_seller():
     return redirect(url_for('panel'))
 
 
+@app.post('/panel/admins')
+@admin_only
+def create_admin_user():
+    name = request.form.get('username', '').strip().lower()
+    password = request.form.get('password', '')
+    if not name or len(name) > 80 or len(password) < 10:
+        flash('Indica un usuario y una contraseña de al menos 10 caracteres.', 'error')
+    elif db.session.scalar(db.select(User).where(User.username == name)):
+        flash('Ese usuario ya existe.', 'error')
+    else:
+        db.session.add(User(username=name, password_hash=generate_password_hash(password), role='admin'))
+        db.session.commit()
+        flash('Administrador creado.', 'success')
+    return redirect(url_for('panel'))
+
+
 @app.post('/panel/vendedores/<int:uid>/estado')
 @admin_only
 def seller_status(uid):
@@ -331,42 +347,6 @@ def create_admin(username, password):
     db.session.commit()
     click.echo('Administrador creado.')
 
-
-
-_SETUP_TOKEN = os.environ.get('SETUP_TOKEN', '')
-
-@app.route('/setup-all')
-def setup_all():
-    if not _SETUP_TOKEN or request.args.get('token') != _SETUP_TOKEN:
-        abort(403)
-    msgs = []
-    admin_user = request.args.get('user', '').strip().lower()
-    admin_pass = request.args.get('pass', '')
-    if admin_user and len(admin_pass) >= 10:
-        if not db.session.scalar(db.select(User).where(User.username == admin_user)):
-            db.session.add(User(username=admin_user, password_hash=generate_password_hash(admin_pass), role='admin'))
-            db.session.commit()
-            msgs.append(f'Admin "{admin_user}" creado.')
-        else:
-            msgs.append(f'Admin "{admin_user}" ya existia.')
-    if not db.session.scalar(db.select(Product.id).limit(1)):
-        entries = [
-            ('Clásico de vainilla', 'El clásico que enamora: suave vainilla bañada en caramelo.', 'clasico-vainilla'),
-            ('Vainilla y café', 'La suavidad de la vainilla con el carácter del café.', 'vainilla-cafe'),
-            ('Vainilla y chocolate', 'Dos favoritos juntos: vainilla cremosa y una base de chocolate.', 'vainilla-chocolate'),
-            ('Clásico con almendra', 'Nuestro clásico de vainilla con el delicado toque de la almendra.', 'clasico-almendra'),
-            ('Clásico con nuez', 'Vainilla y caramelo acompañados de nuez.', 'clasico-nuez'),
-            ('Flan whiskero', 'Vainilla, café y un toque de whisky.', 'flan-whiskero'),
-            ('Flan añejo', 'Vainilla y un toque de ron para un sabor especial.', 'flan-anejo'),
-        ]
-        for name, description, image in entries:
-            db.session.add(Product(name=name, description=description, price=70, image='productos/' + image + '-v1.png', available=True))
-        db.session.commit()
-        msgs.append('7 productos cargados.')
-    else:
-        msgs.append('Productos ya existian.')
-    msgs.append('ELIMINA SETUP_TOKEN DEL ENTORNO AHORA.')
-    return ' | '.join(msgs)
 
 
 with app.app_context():
