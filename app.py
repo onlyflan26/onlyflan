@@ -274,6 +274,36 @@ def create_admin_user():
     return redirect(url_for('panel'))
 
 
+@app.post('/panel/usuarios/<int:uid>/contrasena')
+@admin_only
+def change_user_password(uid):
+    user = db.get_or_404(User, uid)
+    new_pass = request.form.get('password', '')
+    if len(new_pass) < 10:
+        flash('La contraseña debe tener al menos 10 caracteres.', 'error')
+    else:
+        user.password_hash = generate_password_hash(new_pass)
+        db.session.commit()
+        flash(f'Contraseña de "{user.username}" actualizada.', 'success')
+    return redirect(url_for('panel'))
+
+
+@app.post('/panel/mi-contrasena')
+@login_required
+def change_own_password():
+    current_pass = request.form.get('current_password', '')
+    new_pass = request.form.get('new_password', '')
+    if not check_password_hash(current_user.password_hash, current_pass):
+        flash('La contraseña actual no es correcta.', 'error')
+    elif len(new_pass) < 10:
+        flash('La nueva contraseña debe tener al menos 10 caracteres.', 'error')
+    else:
+        current_user.password_hash = generate_password_hash(new_pass)
+        db.session.commit()
+        flash('Tu contraseña fue actualizada.', 'success')
+    return redirect(url_for('panel'))
+
+
 @app.post('/panel/usuarios/<int:uid>/eliminar')
 @admin_only
 def delete_user(uid):
